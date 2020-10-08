@@ -5,3 +5,207 @@ author: JingYao Geng
 date: '`r format(Sys.time(), "%Y-%m-%d") `'
 output: github_document
 ---
+
+```{r setup}
+library(tidyverse)
+library(ggridges)
+```
+
+## Load the weather data
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+weather_df
+
+```
+
+
+## Basic scatterplot
+Create my first scatterplot ever.
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+New approach, same plot.
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+
+Save and edit a plot object
+```{r}
+plot_weather = 
+  weather_df %>%
+  ggplot(aes(x = tmin, y = tmax)) 
+
+plot_weather + geom_point()
+```
+
+
+## Adcanced scatterplot
+
+Start with the same one and make it fancy
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+What about the 'aes' placement...?
+```{r}
+weather_df %>%
+ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name)) + #not good
+  geom_smooth()
+```
+
+Let's facet some things!
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = 0.2, size = 0.3) + # 20% transparency of the points, size = 0.3 makes the points size smaller
+  geom_smooth(se = FALSE, size = 2) + # here the 'size' is to adjust the line
+  facet_grid(. ~ name) # multi-panel plot. In this case, put a '.' means nothing defines the row,and put a tilde and tell it which variable defines the column
+```
+
+Let's combine some elements and try a new plot
+```{r}
+weather_df %>%
+ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+## Some small notes
+
+How many geoms have to exist?
+
+You can have whatever geomes you want.
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_smooth(se = FALSE) 
+```
+
+You can use a neat geom!
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex() # a 2d histogram, where brighter colors say there's a lot of data points. Overkill for dataset that's got a thousand obs. This sort of plot are helpful for understanding what the data distribution might look like.
+  # or 
+  # geom_bin2d() same as geom_hex but with squares
+  # or
+  # geom_density2d() it's sort of like a contour plot
+```
+
+## Univariate plots
+Histograms are really great.
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin)) +
+  geom_histogram()
+```
+
+Can we add color....
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_histogram(position = "dodge")
+  
+# or 
+#weather_df %>%
+  #ggplot(aes(x = tmin, fill = name)) +
+  #geom_histogram()  
+  #facet_grid(., ~name)
+
+ # or don't need the color
+#weather_df %>%
+  #ggplot(aes(x = tmin)) +
+  #geom_histogram()  
+  #facet_grid(., ~name)
+```
+
+
+Let's try a new geometry!
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density()  
+
+weather_df %>%
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density(alpha = 0.3)  
+
+```
+
+What about box plots??
+```{r}
+weather_df %>%
+  ggplot(aes(y = tmin)) +
+  geom_boxplot()
+
+weather_df %>%
+  ggplot(aes(x = name, y = tmin)) +
+  geom_boxplot()
+  
+```
+
+Trendy plots :)
+```{r}
+weather_df %>%
+  ggplot(aes(x = name, y = tmin, fill = name)) +
+  geom_violin(alpha = 0.5)
+  stat_summary(fun = "median")
+```
+
+Ridge plot -- the most popular plot of 2017
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = name)) +
+  geom_boxplot()
+```
+
+## Save and Embed
+
+Let's save a scatterplot
+```{r}
+weather_plot = 
+  weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.5)
+
+##ggsave("./results/weather_plot.pdf", weather_plot, width = 8, height = 5)
+```
+
+What about embedding...
+```{r fig.width=6, fig.height=3}
+weather_plot #adjust all the figures dimension
+```
+
+embed at different size
+```{r fig.width=12, fig.height=6}
+weather_plot
+```
+
