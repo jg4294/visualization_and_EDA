@@ -1,0 +1,292 @@
+---
+title: "Visulization"
+Subtitle: "Part II"
+author: JingYao Geng
+output: github_document
+---
+
+```{r setup}
+ls()
+library(tidyverse)
+library(patchwork)
+```
+
+## load the weather data
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+weather_df
+```
+
+## Remeber this plot .. ?
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  
+```
+
+
+## labels
+title, x, y labels, and caption
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  labs(
+    title = " Temperature plot", 
+    x = "Minimum daily temperature(C)", 
+    y = "Maximum daily temperature (C)", 
+    caption = "Data from rnoaa package; temperature in 2017."
+  )
+```
+
+## Scales
+
+Start with the same plot, x and y scales
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  labs(
+    title = " Temperature plot", 
+    x = "Minimum daily temperature(C)", 
+    y = "Maximum daily temperature (C)", 
+    caption = "Data from rnoaa package; temperature in 2017."
+  ) +
+    
+  # define some scales:  
+  scale_x_continuous(
+    breaks = c(-15, 0, 15),  # x_axis tick marks: -15, 0, 15
+    labels = c("-15 C", "0", "15")
+  ) + 
+  # if your x var. is categorical/factor var., you might use scale_x_discrete()
+  scale_y_continuous(
+    trans = "sqrt" # square-root transformation to y-axis
+    # trans = "log"  log-transformation
+    # position = "right" put the y-labels on the right-side
+  )
+```
+
+Look at color scales
+
+I have defined a mapping b/w name variable and the color aesthetic but I'm not supper happy with this, there are a couple of things that we can do to update this.
+
+scale_color is gonna be another one of these that controls the color attributes, it controls the color feature, and there are gonna to be a lot of options.
+
+ - scale_color_hue(h = c(0, 360): describe a feature of colors, h tells u sth about the hue of a scale, and by default from 0 to 360.
+ - In scale_color_hue and scale color other things, u can rename the sort of in scale x
+ - scale_color_viridis() assme that u are putting in is a continuous value, if it's discrete var. u need to specify: discrete = TRUE
+ - google: viridis color palettes, for various color blindness, this is more accessible
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  labs(
+    title = " Temperature plot", 
+    x = "Minimum daily temperature(C)", 
+    y = "Maximum daily temperature (C)", 
+    caption = "Data from rnoaa package; temperature in 2017."
+  ) + 
+    virdis::scale_color_viridis(
+      name = "Location",
+      discrete = TRUE
+      
+    )
+      
+      #scale_color_hue(
+      #name = "Location",
+      #h = c(100,300))
+    
+```
+
+Next, move away from things that control specific mappings or find grain control of the mappings b/w var. and the plot features.
+Plot features that aren't data dependent that just like background color and font choices. -- Themes:
+
+## Themes
+Shift the legend to the bottom.
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  labs(
+    title = " Temperature plot", 
+    x = "Minimum daily temperature(C)", 
+    y = "Maximum daily temperature (C)", 
+    caption = "Data from rnoaa package; temperature in 2017."
+  ) + 
+    virdis::scale_color_viridis(
+      name = "Location",
+      discrete = TRUE
+    ) +
+    theme(legend.position = "bottom")
+  
+```
+
+Change the overall theme
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+  labs(
+    title = " Temperature plot", 
+    x = "Minimum daily temperature(C)", 
+    y = "Maximum daily temperature (C)", 
+    caption = "Data from rnoaa package; temperature in 2017."
+  ) + 
+    virdis::scale_color_viridis(
+      name = "Location",
+      discrete = TRUE
+      ) +
+    #theme_bw() # background of the graph
+    theme_minimal() + # same as the theme_bw, without the box arounded
+    # theme_classic()
+    # ggthemes::theme_economist()
+    # ggthemes::theme_excel() There are a lot of themes in ggthemes
+    theme(legend.position = "bottom")
+```
+
+## Setting options
+use in the very beginning of the document
+- theme_set() to determine whatever theme I wanna exist everywhere inside of this document
+- options() are to override ggplots default coloring.  viridis palette
+```{r, eval = FALSE}
+library(tidyverse)
+
+knitr::opts_chunk(
+  fig.width = 6,
+  fig.asp = 0.6 # aspect ratio: the height over the width
+  out.width = 90%
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continous.color = "viridis", 
+  ggplot2.continous.fill = "viridis"
+) 
+
+scale_color_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Data args in 'geom'
+
+```{r}
+central_park = 
+  weather_df %>%
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>%
+  filter(name == "Waikiki_HA")
+
+ggplot(data = waikiki, aes(x = date, y = tamx, color = name)) +
+  geom_point() +
+  #geom_line()
+  geom_line(data = cental_park)
+```
+
+## 'patchwork'
+
+remeber faceting?
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density(alpha = 0.5) +
+  facet_grid(. ~name)
+```
+
+What happen whe you want multipanel plots but can't facet...?
+
+The individual plots here matter less than the idea that potentially what I would wanna be able to do is organize all of these into a single figure, and that's where patchwork comes in is if for example I wanted to put a scatter plot 'tmax_tmin_p" next to a density polt "prcp_dens_p", or have that be organized around another plot "tmax_date_p" that has sort og fundamentally different arguments and geometries and mappings. 
+```{r}
+tmax_tmin_p = 
+  weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.5) +
+  theme(legend.position = "none")
+
+prcp_dens_p =
+  weather_df %>%
+  filter(prcp > 0) %>%
+  ggplot(aes(x = prcp, fill = name )) +
+  geom_density(apha = 0.5) +
+  theme(legend.position = "none")
+
+tmax_date_p = 
+  weather_df %>%
+  ggplot(aes(x =  date, y = tmax, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  theme(legend.position = "none")
+
+#tmax_tmin_p + prcp_dens_p # a two side by side panels
+#tmax_tmin_p + prcp_dens_p + tmax_date_p # 3 panels side by side
+#tmax_tmin_p + (prcp_dens_p + tmax_date_p) # 3 panels side by side, but more space for the first
+#tmax_tmin_p / (prcp_dens_p + tmax_date_p) # first on the top, the other 2 panels below
+(tmax_tmin_p + prcp_dens_p) / tmax_date_p # two panels on the top, one on the bottom
+```
+
+## Data manipulation
+
+Control your factors
+```{r}
+weather_df %>%
+  mutate(
+    name = factor(name), 
+    name = forcats::fct_relevel(name, c("Wakiki_HA")) # put wakiki on the first
+  ) %>%
+  ggplot(aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha = 0.5)
+```
+
+What if I wanted densities for tmin and tmax simultaneously?
+ - could I get on a single panel, could I take one panel and have the tmin and then have the tmax
+
+```{r}
+weather_df %>%
+  filter(name == "CentralPark_NY") %>%
+  pivot_longer(
+    tmax:tmin, 
+    names_to = "observation", 
+    values_to = "temperature"
+  ) %>%
+  ggplot(aes(x = temperature, fill = observation)) +
+  geom_density(alpha = 0.5) # a temperature density plot for tmin and tmax
+```
+
+```{r}
+weather_df %>%
+  pivot_longer(
+    tmax:tmin, 
+    names_to = "observation", 
+    values_to = "temperature"
+  ) %>%
+  ggplot(aes(x = temperature, fill = observation)) +
+  geom_density(alpha = 0.5) + 
+  facet_grid(. ~name)
+```
+
+
+Additional example: 
+1:08:30, 
+I skipped it.
+
+
