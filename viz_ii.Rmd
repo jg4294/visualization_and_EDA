@@ -103,7 +103,7 @@ weather_df %>%
     y = "Maximum daily temperature (C)", 
     caption = "Data from rnoaa package; temperature in 2017."
   ) + 
-    virdis::scale_color_viridis(
+    viridis::scale_color_viridis(
       name = "Location",
       discrete = TRUE
       
@@ -130,7 +130,7 @@ weather_df %>%
     y = "Maximum daily temperature (C)", 
     caption = "Data from rnoaa package; temperature in 2017."
   ) + 
-    virdis::scale_color_viridis(
+    viridis::scale_color_viridis(
       name = "Location",
       discrete = TRUE
     ) +
@@ -149,7 +149,7 @@ weather_df %>%
     y = "Maximum daily temperature (C)", 
     caption = "Data from rnoaa package; temperature in 2017."
   ) + 
-    virdis::scale_color_viridis(
+    viridis::scale_color_viridis(
       name = "Location",
       discrete = TRUE
       ) +
@@ -170,8 +170,8 @@ library(tidyverse)
 
 knitr::opts_chunk(
   fig.width = 6,
-  fig.asp = 0.6 # aspect ratio: the height over the width
-  out.width = 90%
+  fig.asp = 0.6, # aspect ratio: the height over the width
+  out.width = "90%"
 )
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
@@ -213,7 +213,7 @@ weather_df %>%
   facet_grid(. ~name)
 ```
 
-What happen whe you want multipanel plots but can't facet...?
+What happen when you want multipanel plots but can't facet...?
 
 The individual plots here matter less than the idea that potentially what I would wanna be able to do is organize all of these into a single figure, and that's where patchwork comes in is if for example I wanted to put a scatter plot 'tmax_tmin_p" next to a density polt "prcp_dens_p", or have that be organized around another plot "tmax_date_p" that has sort og fundamentally different arguments and geometries and mappings. 
 ```{r}
